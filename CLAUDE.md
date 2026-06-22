@@ -44,6 +44,29 @@ simulated visitor overlaid on the museum layout.
 
 ## Stack
 
-TBD — to be filled in when the first implementation PR lands. When added,
-include: language, build command, test command, run command, entry point,
-and the QA restart command.
+- **Language:** TypeScript (strict), no UI framework.
+- **Build/dev:** Vite. **Test:** Vitest. **Render:** HTML5 Canvas 2D.
+- **Entry point:** `src/main.ts` → `src/app/app.ts`.
+- **Install:** `npm install`
+- **Test:** `npm test`
+- **Build:** `npm run build` (outputs `dist/`)
+- **Run (QA app):** `npm run dev` — serves on `http://localhost:5173` by default.
+- **QA restart (production build, what we hand back to Akos):**
+  ```bash
+  pkill -f 'vite preview' 2>/dev/null
+  npm run build
+  npx vite preview --host 127.0.0.1 --port 4173 &
+  ```
+  Serves the production build at `http://127.0.0.1:4173`. **Bind to 127.0.0.1
+  explicitly** — Vite's default preview binds to IPv6 localhost only, which
+  won't be reachable by any reverse proxy listening on IPv4. After restart,
+  verify with `curl -sI http://127.0.0.1:4173` (expect `HTTP/1.1 200 OK`) and
+  `ss -ltn | grep 4173` (expect `127.0.0.1:4173`, not `[::1]:4173`).
+
+  For live development (HMR), use `npm run dev` — but for **handoff
+  verification** always use the production preview so Akos sees the latest
+  build, not stale HMR state.
+
+The simulation engine (`src/sim/`) and model (`src/model/`) are pure and
+DOM-free — run them headless under Vitest. The renderer (`src/render/`) and app
+wiring (`src/app/`) own all DOM/canvas access.
