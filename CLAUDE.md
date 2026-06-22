@@ -2,16 +2,17 @@
 
 Conventions for AI-assisted work in this repo. **Read this before making changes.**
 
-## Workflow: issue-first, no per-issue branches
+## Workflow: issue-first, one branch per issue
 
 Every change starts with a GitHub issue. No PR without an issue to anchor it.
 
 1. Open (or find) a GitHub issue describing the change. Keep scope tight — one issue, one concern.
-2. Work on `main` directly. No per-issue feature branches.
+2. Branch from `main`: `git checkout -b issue-<number>-<short-slug>`
+   (e.g. `issue-12-fix-pending-tx-dedup`).
 3. Commit in small logical steps. Reference the issue in commit messages (`#12`).
 4. Open a PR with `gh pr create`. Title and body reference the issue.
 5. **Wait for explicit approval from Akos before merging.** Do not self-merge.
-6. After merge, the PR closes automatically.
+6. After merge, delete the branch.
 
 ### Superseded PRs
 If a later PR makes an earlier one obsolete, **close the older PR with a clear
