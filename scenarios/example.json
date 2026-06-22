@@ -16,5 +16,5 @@
     { "id": "g2", "size": 6, "startAt": 15, "route": ["lobby", "room_1", "room_2", "room_3"] },
     { "id": "g3", "size": 6, "startAt": 30, "route": ["lobby", "room_1", "room_2", "room_3"] }
   ],
-  "params": { "walkSpeed": 10, "tickRate": 30, "timeScale": 8 }
+  "params": { "walkSpeed": 10, "tickRate": 30, "timeScale": 8, "spotGap": 16 }
 }

@@ -18,7 +18,7 @@ function scenario(): Scenario {
       { id: 'g1', size: 4, startAt: 0, route: ['a', 'b', 'c'] },
       { id: 'g2', size: 4, startAt: 0.5, route: ['a', 'b', 'c'] },
     ],
-    params: { walkSpeed: 40, tickRate: 30, timeScale: 1 },
+    params: { walkSpeed: 40, tickRate: 30, timeScale: 1, spotGap: 10 },
   };
 }
 

@@ -26,6 +26,7 @@ export interface Params {
   walkSpeed: number;   // layout units/second
   tickRate: number;    // sim steps/second (fixed timestep)
   timeScale: number;   // wall-clock speedup for watchability
+  spotGap: number;     // minimum separation between dwell spots, layout units
 }
 
 export interface Scenario {

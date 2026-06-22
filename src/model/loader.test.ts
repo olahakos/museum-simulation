@@ -13,7 +13,7 @@ function valid(): Scenario {
       { id: 'a_b', between: ['a', 'b'], at: { x: 100, y: 50 }, throughput: 1 },
     ],
     groups: [{ id: 'g1', size: 2, startAt: 0, route: ['a', 'b'] }],
-    params: { walkSpeed: 40, tickRate: 30, timeScale: 8 },
+    params: { walkSpeed: 40, tickRate: 30, timeScale: 8, spotGap: 10 },
   };
 }
 
