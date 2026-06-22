@@ -2,9 +2,9 @@
   "name": "Example Museum",
   "rooms": [
     { "id": "lobby",   "rect": { "x": 0,   "y": 100, "w": 180, "h": 160 }, "capacity": 40, "dwell": 0 },
-    { "id": "room_1",  "rect": { "x": 180, "y": 100, "w": 180, "h": 160 }, "capacity": 12, "dwell": 90 },
-    { "id": "room_2",  "rect": { "x": 360, "y": 100, "w": 180, "h": 160 }, "capacity": 12, "dwell": 120 },
-    { "id": "room_3",  "rect": { "x": 540, "y": 100, "w": 180, "h": 160 }, "capacity": 8,  "dwell": 150 }
+    { "id": "room_1",  "rect": { "x": 180, "y": 100, "w": 180, "h": 160 }, "capacity": 12, "dwell": 10 },
+    { "id": "room_2",  "rect": { "x": 360, "y": 100, "w": 180, "h": 160 }, "capacity": 12, "dwell": 15 },
+    { "id": "room_3",  "rect": { "x": 540, "y": 100, "w": 180, "h": 160 }, "capacity": 8,  "dwell": 5 }
   ],
   "doorways": [
     { "id": "lobby_room1", "between": ["lobby",  "room_1"], "at": { "x": 180, "y": 180 }, "throughput": 1.2 },
@@ -13,8 +13,8 @@
   ],
   "groups": [
     { "id": "g1", "size": 6, "startAt": 0,  "route": ["lobby", "room_1", "room_2", "room_3"] },
-    { "id": "g2", "size": 6, "startAt": 20, "route": ["lobby", "room_1", "room_2", "room_3"] },
-    { "id": "g3", "size": 6, "startAt": 40, "route": ["lobby", "room_1", "room_2", "room_3"] }
+    { "id": "g2", "size": 6, "startAt": 15, "route": ["lobby", "room_1", "room_2", "room_3"] },
+    { "id": "g3", "size": 6, "startAt": 30, "route": ["lobby", "room_1", "room_2", "room_3"] }
   ],
   "params": { "walkSpeed": 10, "tickRate": 30, "timeScale": 8 }
 }
