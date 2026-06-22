@@ -59,8 +59,8 @@ simulated visitor overlaid on the museum layout.
   ```
   Serves the production build at `http://127.0.0.1:4173`. **Bind to 127.0.0.1
   explicitly** — Vite's default preview binds to IPv6 localhost only, which
-  breaks Cloudflare Tunnel routing. After restart, verify with
-  `curl -sI http://127.0.0.1:4173` (expect `HTTP/1.1 200 OK`) and
+  won't be reachable by any reverse proxy listening on IPv4. After restart,
+  verify with `curl -sI http://127.0.0.1:4173` (expect `HTTP/1.1 200 OK`) and
   `ss -ltn | grep 4173` (expect `127.0.0.1:4173`, not `[::1]:4173`).
 
   For live development (HMR), use `npm run dev` — but for **handoff
