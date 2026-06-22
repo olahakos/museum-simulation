@@ -1,2 +1,4 @@
-const app = document.getElementById('app');
-if (app) app.textContent = 'Museum Simulation — scaffold OK';
+import { startApp } from './app/app';
+
+const root = document.getElementById('app');
+if (root) startApp(root);
