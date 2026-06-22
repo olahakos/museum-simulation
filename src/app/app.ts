@@ -102,26 +102,60 @@ function buildControls(scenario: Scenario): HTMLElement {
 
   // Per-room dwell + capacity.
   for (const room of scenario.rooms) {
-    const group = document.createElement('fieldset');
-    group.style.cssText =
-      'display:flex;gap:8px;align-items:flex-end;border:1px solid #ddd;' +
-      'border-radius:4px;padding:4px 8px;margin:0;';
-    const legend = document.createElement('legend');
-    legend.textContent = room.id;
-    legend.style.cssText = 'padding:0 4px;color:#666;';
-    group.append(
-      legend,
-      numberField('Dwell (s)', room.dwell, 0, 1, (v) => {
-        room.dwell = v;
-      }),
-      numberField('Capacity', room.capacity, 1, 1, (v) => {
-        room.capacity = Math.round(v);
-      }),
+    panel.append(
+      fieldset(room.id, [
+        numberField('Dwell (s)', room.dwell, 0, 1, (v) => {
+          room.dwell = v;
+        }),
+        numberField('Capacity', room.capacity, 1, 1, (v) => {
+          room.capacity = Math.round(v);
+        }),
+      ]),
     );
-    panel.append(group);
+  }
+
+  // Per-group size, start time + route. Edits apply to groups that haven't
+  // spawned yet (and to all groups after Reset).
+  const roomIds = new Set(scenario.rooms.map((r) => r.id));
+  for (const group of scenario.groups) {
+    panel.append(
+      fieldset(group.id, [
+        numberField('Size', group.size, 1, 1, (v) => {
+          group.size = Math.round(v);
+        }),
+        numberField('Start (s)', group.startAt, 0, 1, (v) => {
+          group.startAt = v;
+        }),
+        textField('Route', group.route.join(', '), (raw) => {
+          const route = raw
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+          // Only accept a non-empty route of known room ids.
+          if (route.length === 0 || !route.every((id) => roomIds.has(id))) {
+            return false;
+          }
+          group.route = route;
+          return true;
+        }),
+      ]),
+    );
   }
 
   return panel;
+}
+
+/** A bordered, titled group of fields. */
+function fieldset(title: string, fields: HTMLElement[]): HTMLElement {
+  const set = document.createElement('fieldset');
+  set.style.cssText =
+    'display:flex;gap:8px;align-items:flex-end;border:1px solid #ddd;' +
+    'border-radius:4px;padding:4px 8px;margin:0;';
+  const legend = document.createElement('legend');
+  legend.textContent = title;
+  legend.style.cssText = 'padding:0 4px;color:#666;';
+  set.append(legend, ...fields);
+  return set;
 }
 
 /** Labeled number input that calls `onChange` with a clamped value on edit. */
@@ -146,6 +180,32 @@ function numberField(
   input.addEventListener('input', () => {
     const v = parseFloat(input.value);
     if (Number.isFinite(v) && v >= min) onChange(v);
+  });
+  wrap.append(text, input);
+  return wrap;
+}
+
+/**
+ * Labeled text input. `onChange` returns whether the raw value was accepted;
+ * rejected input is flagged red but left for the user to keep editing.
+ */
+function textField(
+  label: string,
+  value: string,
+  onChange: (raw: string) => boolean,
+): HTMLElement {
+  const wrap = document.createElement('label');
+  wrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+  const text = document.createElement('span');
+  text.textContent = label;
+  text.style.cssText = 'color:#666;font-size:11px;';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = value;
+  input.style.cssText = 'width:200px;';
+  input.addEventListener('input', () => {
+    const ok = onChange(input.value);
+    input.style.color = ok ? '' : '#c00';
   });
   wrap.append(text, input);
   return wrap;
