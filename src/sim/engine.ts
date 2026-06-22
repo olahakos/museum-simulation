@@ -1,5 +1,5 @@
 import type { Scenario, Room, Point } from '../model/types';
-import { moveToward, reached, doorwayBetween, dwellSpot, queueSlot } from './geometry';
+import { moveToward, reached, doorwayBetween, spreadSpot, queueSlot } from './geometry';
 
 export type AgentState = 'WAITING' | 'WALKING' | 'QUEUING' | 'DWELLING' | 'DONE';
 
@@ -59,9 +59,11 @@ export class Simulation {
       if (this.spawned.has(g.id) || this.time < g.startAt) continue;
       this.spawned.add(g.id);
       const room0 = this.rooms.get(g.route[0])!;
+      const occupied = this.dwellSpotsInRoom(g.route[0]);
       for (let k = 0; k < g.size; k++) {
         const id = `${g.id}-${k}`;
-        const spot = dwellSpot(room0, id);
+        const spot = spreadSpot(room0, id, occupied, this.scenario.params.spotGap);
+        occupied.push(spot);
         this.agents.push({
           id,
           groupId: g.id,
@@ -77,6 +79,24 @@ export class Simulation {
         });
       }
     }
+  }
+
+  // Snapshot of all dwell spots currently inside a room. Used by spawnGroups
+  // and admit so a freshly-placed visitor never lands on top of an existing
+  // one. We treat each agent's current pos as occupying its room whenever
+  // the agent is still moving through the layout — walking, dwelling,
+  // queueing, or waiting for the doorway credit — and exclude DONE agents.
+  protected dwellSpotsInRoom(roomId: string): Point[] {
+    const spots: Point[] = [];
+    for (const a of this.agents) {
+      if (a.state === 'DONE') continue;
+      if (a.currentRoom !== roomId) continue;
+      // Queue and doorway-bound agents stand at the doorway slot, not a free
+      // dwell spot — they would unfairly block the spread algorithm. Skip.
+      if (a.state === 'QUEUING') continue;
+      spots.push(a.pos);
+    }
+    return spots;
   }
 
   protected advance(a: Agent, dt: number): void {
@@ -158,7 +178,10 @@ export class Simulation {
     const dest = this.rooms.get(destId)!;
     a.routeIndex++;
     a.currentRoom = destId;
-    a.target = dwellSpot(dest, a.id);
+    const occupied = this.dwellSpotsInRoom(destId);
+    const spot = spreadSpot(dest, a.id, occupied, this.scenario.params.spotGap);
+    occupied.push(spot);
+    a.target = spot;
     a.headingTo = 'dwell';
     a.pendingDoorway = null;
     a.state = 'WALKING';
