@@ -1,5 +1,5 @@
 import type { Scenario, Room, Point } from '../model/types';
-import { moveToward, reached, doorwayBetween, dwellSpot } from './geometry';
+import { moveToward, reached, doorwayBetween, dwellSpot, queueSlot } from './geometry';
 
 export type AgentState = 'WAITING' | 'WALKING' | 'QUEUING' | 'DWELLING' | 'DONE';
 
@@ -23,20 +23,33 @@ export class Simulation {
 
   protected rooms = new Map<string, Room>();
   protected spawned = new Set<string>();
+  protected budget = new Map<string, number>();   // doorway id -> accumulated throughput credit
+  protected queues = new Map<string, Agent[]>();   // doorway id -> FIFO of waiting agents
 
   constructor(protected scenario: Scenario) {
     for (const r of scenario.rooms) this.rooms.set(r.id, r);
+    for (const d of scenario.doorways) {
+      this.budget.set(d.id, 0);
+      this.queues.set(d.id, []);
+    }
   }
 
   reset(): void {
     this.agents.length = 0;
     this.time = 0;
     this.spawned.clear();
+    for (const d of this.scenario.doorways) {
+      this.budget.set(d.id, 0);
+      this.queues.set(d.id, []);
+    }
   }
 
   step(dt: number): void {
     this.time += dt;
     this.spawnGroups();
+    for (const d of this.scenario.doorways) {
+      this.budget.set(d.id, this.budget.get(d.id)! + d.throughput * dt);
+    }
     for (const a of this.agents) this.advance(a, dt);
     this.resolveDoorways();
   }
@@ -75,7 +88,7 @@ export class Simulation {
           a.state = 'DWELLING';
           a.dwellRemaining = this.rooms.get(a.currentRoom)!.dwell;
         } else {
-          a.state = 'QUEUING'; // waiting at the doorway to be admitted
+          this.enqueue(a);
         }
       }
     } else if (a.state === 'DWELLING') {
@@ -98,11 +111,45 @@ export class Simulation {
     }
   }
 
-  // Task 4: no congestion — any QUEUING agent crosses immediately.
-  // Task 5 overrides this with capacity + throughput gating.
-  protected resolveDoorways(): void {
+  protected enqueue(a: Agent): void {
+    a.state = 'QUEUING';
+    const q = this.queues.get(a.pendingDoorway!)!;
+    if (!q.includes(a)) q.push(a);
+  }
+
+  protected countInRoom(roomId: string): number {
+    let n = 0;
     for (const a of this.agents) {
-      if (a.state === 'QUEUING') this.admit(a);
+      if (a.state !== 'DONE' && a.currentRoom === roomId) n++;
+    }
+    return n;
+  }
+
+  protected resolveDoorways(): void {
+    // Deterministic doorway order.
+    const doorways = [...this.scenario.doorways].sort((x, y) => (x.id < y.id ? -1 : 1));
+    for (const d of doorways) {
+      const q = this.queues.get(d.id)!;
+      // Position waiting agents in their slots (on the side of their current room).
+      for (let i = 0; i < q.length; i++) {
+        const fromRoom = this.rooms.get(q[i].currentRoom)!;
+        q[i].pos = queueSlot(d, fromRoom, i);
+      }
+      // FIFO admission: only the front agent may cross; if it's blocked, all wait.
+      while (q.length > 0) {
+        const a = q[0];
+        const destId = a.route[a.routeIndex + 1];
+        const dest = this.rooms.get(destId)!;
+        const hasSpace = this.countInRoom(destId) < dest.capacity;
+        const hasCredit = this.budget.get(d.id)! >= 1;
+        if (hasSpace && hasCredit) {
+          this.budget.set(d.id, this.budget.get(d.id)! - 1);
+          q.shift();
+          this.admit(a);
+        } else {
+          break;
+        }
+      }
     }
   }
 
