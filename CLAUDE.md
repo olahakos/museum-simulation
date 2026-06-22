@@ -44,6 +44,17 @@ simulated visitor overlaid on the museum layout.
 
 ## Stack
 
-TBD — to be filled in when the first implementation PR lands. When added,
-include: language, build command, test command, run command, entry point,
-and the QA restart command.
+- **Language:** TypeScript (strict), no UI framework.
+- **Build/dev:** Vite. **Test:** Vitest. **Render:** HTML5 Canvas 2D.
+- **Entry point:** `src/main.ts` → `src/app/app.ts`.
+- **Install:** `npm install`
+- **Test:** `npm test`
+- **Build:** `npm run build` (outputs `dist/`)
+- **Run (QA app):** `npm run dev` — serves on `http://localhost:5173` by default.
+- **QA restart:** stop any running `vite` dev server and run `npm run dev` again.
+  For the production-like build: `npm run build && npm run preview`
+  (serves `dist/` on `http://localhost:4173`).
+
+The simulation engine (`src/sim/`) and model (`src/model/`) are pure and
+DOM-free — run them headless under Vitest. The renderer (`src/render/`) and app
+wiring (`src/app/`) own all DOM/canvas access.
